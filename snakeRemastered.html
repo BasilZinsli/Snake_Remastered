@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style type="text/css">
+        #title{
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        font-size: 5vw;
+        border:White solid 8px;
+        border-radius: 2px;
+        text-align: center;
+        margin:1.4%;
+        padding: 0%;
+        color:white;  
+        }
+        #score{
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            font-size: 2vw;
+            text-align:right;
+            margin-right: 3%;
+            padding: 0%;
+            color:white;  
+            float: right;  
+        }
+
+        #message{
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+            font-size: 2vw;
+            text-align:left;
+            margin-left: 3%;
+            margin-right: 3%;
+            color:white;  
+            float: left;
+            
+        }
+
+        body{
+            height: 95vh;
+            width: 100vw; 
+            margin: 0;
+            align-items: center;
+            justify-content: center;
+            background-color: rgb(0, 0, 0);
+        }
+
+
+        #gamegrid{ 
+            background-color: rgb(186, 178, 28);
+            border-radius: 2px;
+            height:75vh;
+            width: 75vh;
+            margin:auto;
+            display: grid;
+            grid-template-rows: repeat(21, 1fr);
+            grid-template-columns: repeat(21, 1fr);
+        }
+
+        #snake{
+            background-color: rgb(27, 133, 36);
+            border: solid 0.5vh black;
+            grid-area: 11/11;
+            border-radius: 5vh;
+        }
+
+        #food{
+            background-color:rgb(217, 102, 64);
+            border: solid 0.5vh black;
+            grid-area: 10/10;
+        }
+    </style>
+    <title>Games</title>
+</head>
+<body>
+    <h1 id="title">Snake Remastered</h1>
+    <h2 id="score">Your score: 0</h2>
+    <h2 id="message">Let's gooo!</h2> 
+    <div id="gamegrid">
+        <div id="food"></div>
+        <div id="snake"></div>
+    </div>   
+    <script type="text/javascript">
+        
+        const snake = document.getElementById("snake");
+        const food =  document.getElementById("food");
+        const score =  document.getElementById("score");
+        const gameboard = document.getElementById("gamegrid");
+        const message =  document.getElementById("message");
+
+        let rowsnake=11;
+        let colsnake=11;
+        let str1, str2=null;
+        let direction=0;
+        let tail = [];
+        let taildivs = [];
+        let RowCol = [];
+        let messages = ["Keep going!", "Close one!!", "Focus now!!", "Let's gooo!"];
+        let tailcount=0;
+        let temp=null;
+        food.style.gridArea="10/10";
+
+        let lastRenderTime=0;
+        const secondsSinceLastRender=0;
+        let snakeSpeed=1.5;
+        document.onkeydown = dir;
+
+
+        function main(currentTime){
+            window.requestAnimationFrame(main)
+            const secondsSinceLastRender =(currentTime-lastRenderTime)/1000;
+            if (secondsSinceLastRender<1 / snakeSpeed) return
+            
+            lastRenderTime = currentTime;
+            walk(direction);
+        }
+
+        window.requestAnimationFrame(main);
+
+        function dir() {
+            direction=window.event.keyCode
+        }
+
+        function walk(dir){
+            tail.unshift(snake.style.gridArea);
+            tail.splice(tailcount+1,tail.length-tailcount);
+            switch(dir){    
+                case 37:
+                    colsnake-=1;
+                    snake.style.gridArea=String(rowsnake)+"/"+String(colsnake);
+                    break;
+                case 38:
+                    rowsnake-=1;
+                    snake.style.gridArea=String(rowsnake)+"/"+String(colsnake);
+                    break;
+                case 39:
+                    colsnake+=1;
+                    snake.style.gridArea=String(rowsnake)+"/"+String(colsnake);
+                    break;
+                case 40:
+                    rowsnake+=1;
+                    snake.style.gridArea=String(rowsnake)+"/"+String(colsnake);
+                    break;
+            }
+            checkBorder(dir);
+            checkFood();
+            updateDivs();
+            checkTailCrash();
+            
+            
+            
+            
+        }
+
+        function checkBorder(dir){
+            if((snake.style.gridColumnStart==-1 & dir==37) || (snake.style.gridColumnStart==22 & dir==39) || (snake.style.gridRowStart==-1 & dir==38) || (snake.style.gridRowStart==22 & dir==40)){
+            alert("GAMEOVER");
+            location.reload();
+            }
+        }
+
+        function checkTailCrash(){
+            for(let k=0; k<taildivs.length; k++){
+                if((snake.style.gridColumnStart ==  taildivs[k].style.gridColumnStart) &&  (snake.style.gridRowStart ==  taildivs[k].style.gridRowStart)) {
+                alert("GAMEOVER");
+                location.reload();    
+                }
+            }
+            
+        }
+
+        function randomFood(){
+        food.style.gridArea=String(Math.round(Math.random()*20+1))+"/"+String(Math.round(Math.random()*20+1));
+        for(let k=0; k<taildivs.length; k++){
+            if((food.style.gridColumnStart ==  taildivs[k].style.gridColumnStart) &&  (food.style.gridRowStart ==  taildivs[k].style.gridRowStart) ||(food.style.gridColumnStart ==  snake.style.gridColumnStart) &&  (food.style.gridRowStart ==  snake.style.gridRowStart)) {
+            randomFood();   
+            }
+        }
+        }
+
+        function checkFood(){
+            if(snake.style.gridArea == food.style.gridArea){
+            randomFood();
+            grow();
+            }
+        }
+
+        function updateDivs(){
+            if (tailcount>0){
+                for (let i=0; i<tailcount; i++){
+                    RowCol = tail[i].split("/", 2); 
+                    taildivs[i].style.gridRowStart= String(RowCol[0]);
+                    taildivs[i].style.gridColumnStart= String(RowCol[1]);    
+                }
+            }
+        }
+
+        function grow(){
+        taildivs[tailcount] = document.createElement("div");
+        gameboard.appendChild(taildivs[tailcount]);
+        taildivs[tailcount].style.backgroundColor="green";
+        taildivs[tailcount].style.border="solid 0.5vh black";
+        tailcount++;
+        score.innerHTML="Your score: "+String(tailcount);
+        message.innerHTML = messages[Math.round(Math.random()*3)];
+        snakeSpeed+=0.3;
+        }
+    </script>
+</body>
+</html>
